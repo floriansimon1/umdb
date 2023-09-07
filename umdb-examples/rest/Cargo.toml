@@ -1,0 +1,11 @@
+[package]
+name = "umdb-rest-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-cors = "0.6.4"
+actix-web = "4.4.0"
+serde = "1.0.188"
+serde_json = "1.0.105"
+umdb = { path = "../../umdb" }
