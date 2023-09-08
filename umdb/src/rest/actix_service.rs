@@ -12,6 +12,8 @@ pub fn configure(config: &mut web::ServiceConfig, umdb: ActixUmdbHandle) {
 }
 
 async fn get_config(actix_handle: ActixUmdbHandle) -> Result<impl Responder> {
+    log::trace!("Sending settings…");
+
     let handle_guard = read_handle(&actix_handle)?;
 
     Ok(web::Json(handle_guard.umdb.configuration.clone()))

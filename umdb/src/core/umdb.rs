@@ -2,10 +2,15 @@ use super::configuration::Configuration;
 
 pub struct Umdb {
     pub configuration: Configuration,
+    pub enable_logs:   bool,
 }
 
 impl Umdb {
     pub fn new() -> Umdb {
-        Umdb { configuration: Configuration::new() }
-    } 
+        Umdb { configuration: Configuration::new(), enable_logs: true }
+    }
+
+    pub fn enable_logging(&mut self) {
+        self.enable_logs = true;
+    }
 }

@@ -13,6 +13,10 @@ async fn main() -> std::io::Result<()> {
     let umdb_instance = rest::create_umdb_handle(fatal_error_sender.downgrade());
     let port          = 8000;
 
+    env_logger::init();
+
+    umdb_instance.write().unwrap().umdb.enable_logging();
+
     println!("Starting server…");
 
     let server = HttpServer
