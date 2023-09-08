@@ -1,12 +1,17 @@
+use std::process::exit;
+
 use actix_cors::Cors;
+use tokio::sync::mpsc;
 use actix_web::{App, HttpServer, web};
 
 use umdb::rest;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let umdb_instance = rest::create_umdb_handle(); 
-    let port = 8000;
+    let (fatal_error_sender, mut fatal_error_receiver) = mpsc::unbounded_channel();
+
+    let umdb_instance = rest::create_umdb_handle(fatal_error_sender.downgrade());
+    let port          = 8000;
 
     println!("Starting server…");
 
@@ -25,5 +30,17 @@ async fn main() -> std::io::Result<()> {
 
     println!("Listening for requests on port {port}");
 
-    server.run().await
+    tokio::select!(
+        result = server.run() => { result.expect("An unknown error occurred while running the HTTP server") }
+
+        error = fatal_error_receiver.recv() => {
+            if let Some(error) = error {
+                eprintln!("A fatal error occurred: {:?}", error);
+
+                exit(1)
+            }
+        }
+    );
+
+    Ok(())
 }
