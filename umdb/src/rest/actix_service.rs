@@ -1,12 +1,13 @@
 use actix_web::{error::ErrorBadRequest, HttpRequest, Responder, Result, web};
 
-use crate::{adb::executable::check_adb, core::System};
+use crate::{adb::{executable::check_adb, device::adb_devices}, core::System};
 use super::{ActixUmdbHandle, error_handling::{format_error, MissingHeaderError, make_system_unsupported_reponse}, headers::read_system_header, read_handle};
 
 pub fn configure(config: &mut web::ServiceConfig, umdb: ActixUmdbHandle) {
     config
     .route("/configuration", web::get().to(get_config))
     .route("/executable/check", web::get().to(check_executable))
+    .route("/devices", web::get().to(list_devices))
     .app_data(umdb);
 }
 
@@ -39,4 +40,22 @@ async fn check_executable(request: HttpRequest) -> Result<impl Responder> {
     })?;
 
     Ok("")
+}
+
+async fn list_devices(request: HttpRequest, actix_handle: ActixUmdbHandle) -> Result<impl Responder> {
+    let system = read_system_header(&request).map_err(|error| {
+        ErrorBadRequest(format_error(error))
+    })?;
+
+    if system != System::Android {
+        return Err(make_system_unsupported_reponse());
+    }
+
+    let handle_guard = read_handle(&actix_handle)?;
+
+    let devices = adb_devices(&handle_guard.umdb.configuration).map_err(|error| {
+        ErrorBadRequest(format_error(error))
+    })?;
+
+    Ok(web::Json(devices))
 }

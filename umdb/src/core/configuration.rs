@@ -2,7 +2,7 @@ use serde::Serialize;
 
 #[derive(Clone, Serialize)]
 pub struct Configuration {
-    adb_command: Option<String>,
+    pub adb_command: Option<String>,
 }
 
 impl Configuration {

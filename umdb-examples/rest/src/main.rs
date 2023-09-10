@@ -13,6 +13,8 @@ async fn main() -> std::io::Result<()> {
     let umdb_instance = rest::create_umdb_handle(fatal_error_sender.downgrade());
     let port          = 8000;
 
+    umdb_instance.write().unwrap().umdb.configuration.adb_command = Some("adb".to_string());
+
     env_logger::init();
 
     println!("Starting server…");
