@@ -1,4 +1,6 @@
+mod adb;
 mod core;
+mod common;
 
 pub mod rest;
 

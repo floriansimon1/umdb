@@ -1,5 +1,11 @@
 use super::configuration::Configuration;
 
+#[derive(PartialEq)]
+pub enum System {
+    Android,
+    Ios,
+}
+
 pub struct Umdb {
     pub configuration: Configuration,
     pub enable_logs:   bool,
