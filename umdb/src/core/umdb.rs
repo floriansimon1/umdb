@@ -9,8 +9,4 @@ impl Umdb {
     pub fn new() -> Umdb {
         Umdb { configuration: Configuration::new(), enable_logs: true }
     }
-
-    pub fn enable_logging(&mut self) {
-        self.enable_logs = true;
-    }
 }

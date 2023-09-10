@@ -15,8 +15,6 @@ async fn main() -> std::io::Result<()> {
 
     env_logger::init();
 
-    umdb_instance.write().unwrap().umdb.enable_logging();
-
     println!("Starting server…");
 
     let server = HttpServer
