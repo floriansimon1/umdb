@@ -8,9 +8,9 @@ use umdb::rest;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let (fatal_error_sender, mut fatal_error_receiver) = mpsc::unbounded_channel();
+    let (termination_signal_sender, mut termination_signal_receiver) = mpsc::unbounded_channel();
 
-    let umdb_instance = rest::create_umdb_handle(fatal_error_sender.downgrade());
+    let umdb_instance = rest::create_umdb_handle(termination_signal_sender.downgrade());
     let port          = 8000;
 
     umdb_instance.write().unwrap().umdb.configuration.adb_command = Some("adb".to_string());
@@ -37,7 +37,7 @@ async fn main() -> std::io::Result<()> {
     tokio::select!(
         result = server.run() => { result.expect("An unknown error occurred while running the HTTP server") }
 
-        error = fatal_error_receiver.recv() => {
+        error = termination_signal_receiver.recv() => {
             if let Some(error) = error {
                 eprintln!("A fatal error occurred: {:?}", error);
 

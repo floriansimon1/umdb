@@ -13,26 +13,26 @@ pub enum FatalError {
 pub struct UmdbHandle {
     pub umdb: Umdb,
 
-    fatal_error_sender: WeakUnboundedSender<FatalError>,
+    termination_request_sender: WeakUnboundedSender<Option<FatalError>>,
 }
 
 impl UmdbHandle {
     pub fn signal_fatal(&self, error: FatalError) {
         self
-        .fatal_error_sender
+        .termination_request_sender
         .upgrade()
-        .map(|sender| sender.send(error));
+        .map(|sender| sender.send(Some(error)));
     }
 }
 
 pub type ActixUmdbHandle = Data<RwLock<UmdbHandle>>;
 
-pub fn create_umdb_handle(fatal_error_sender: WeakUnboundedSender<FatalError>) -> ActixUmdbHandle {
+pub fn create_umdb_handle(termination_request_sender: WeakUnboundedSender<Option<FatalError>>) -> ActixUmdbHandle {
     let umdb = Umdb::new();
 
     let handle = UmdbHandle {
         umdb,
-        fatal_error_sender,
+        termination_request_sender,
     };
 
     Data::new(RwLock::new(handle))
