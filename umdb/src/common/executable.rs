@@ -1,4 +1,4 @@
-use std::{fs, os::unix::prelude::PermissionsExt};
+use std::fs::{self, Metadata};
 
 use pathsearch::find_executable_in_path;
 use serde::Serialize;
@@ -11,6 +11,18 @@ pub enum CheckExecutableError {
     CannotCheckVersion,
     NotAnExecutable,
     NotAFile,
+}
+
+#[cfg(not(target_os = "windows"))]
+fn has_right_permissions(file_metadata: &Metadata) -> bool {
+    use std::os::unix::prelude::PermissionsExt;
+
+    file_metadata.permissions().mode() & 0o111 != 0
+}
+
+#[cfg(target_os = "windows")]
+fn has_right_permissions(_: &Metadata) -> bool {
+    true
 }
 
 pub fn perform_common_executable_checks(path: &str) -> Result<String, CheckExecutableError> {
@@ -26,7 +38,7 @@ pub fn perform_common_executable_checks(path: &str) -> Result<String, CheckExecu
         return Err(CheckExecutableError::NotAFile);
     }
 
-    if cfg!(not(target_os = "windows")) && file_metadata.permissions().mode() & 0o111 == 0 {
+    if !has_right_permissions(&file_metadata) {
         return Err(CheckExecutableError::NotAnExecutable);
     }
 
