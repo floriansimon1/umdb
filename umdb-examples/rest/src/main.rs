@@ -39,9 +39,11 @@ async fn main() -> std::io::Result<()> {
 
         error = termination_signal_receiver.recv() => {
             if let Some(error) = error {
-                eprintln!("A fatal error occurred: {:?}", error);
+                if let Some(error) = error {
+                    eprintln!("A fatal error occurred: {:?}", error);
 
-                exit(1)
+                    exit(1)
+                }
             }
         }
     );
