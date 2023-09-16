@@ -1,7 +1,7 @@
-use std::{collections::BTreeMap, net::IpAddr};
+use std::{collections::BTreeMap, net::IpAddr, time::Duration};
 
 use regex::Regex;
-use tokio::process::Command;
+use tokio::{process::Command, time::timeout};
 
 use crate::{common::device::{Device, DeviceListingError}, core::Configuration};
 
@@ -32,14 +32,28 @@ impl ScanResult {
         }
     }
 
-    pub fn to_device(&self, model: Option<String>, aliases: &BTreeMap<String, String>) -> Device {
+    pub fn to_device(&self, model_query_result: Result<String, DeviceListingError>, aliases: &BTreeMap<String, String>) -> Device {
+        let mut force_offline = false;
+
+        let model = match model_query_result {
+            Ok(model_name) => Some(model_name),
+
+            Err(DeviceListingError::DeviceUnresponsive) => {
+                force_offline = true;
+
+                None
+            }
+
+            Err(_) => None,
+        };
+
         match &self {
             ScanResult::IpResult(ip_result) => Device {
                 model,
 
                 is_remote: true,
                 id: ip_result.id.clone(),
-                is_offline: ip_result.is_offline,
+                is_offline: force_offline || ip_result.is_offline,
                 alias: aliases.get(&ip_result.id).map(|alias| alias.to_string()),
             },
 
@@ -88,7 +102,7 @@ pub async fn adb_devices(configuration: &Configuration) -> Result<Vec<Device>, D
     .map(|result| result.clone())
     .collect::<Vec<ScanResult>>();
 
-    let model_names = futures
+    let model_name_queries = futures
     ::future
     ::join_all(
         results
@@ -129,8 +143,8 @@ pub async fn adb_devices(configuration: &Configuration) -> Result<Vec<Device>, D
     Ok(
         results
         .iter()
-        .zip(model_names)
-        .map(|(result, model)| ScanResult::to_device(result, model.ok(), &aliases))
+        .zip(model_name_queries)
+        .map(|(result, model_query)| ScanResult::to_device(result, model_query, &aliases))
         .collect()
     )
 }
@@ -202,12 +216,18 @@ fn try_parse_remote_id(field: &str) -> Option<(IpAddr, u16)> {
 }
 
 async fn find_device_model(adb_command: &str, device_id: &str) -> Result<String, DeviceListingError> {
-    let output = Command
+    let process_task = Command
     ::new(adb_command)
     .args(&["-s", device_id, "shell", "getprop"])
-    .output()
-    .await
-    .map_err(|error| DeviceListingError::CannotRunProcess(error.to_string()))?;
+    .output();
+
+    let result = timeout(Duration::from_secs(1), process_task).await;
+
+    let output = match result {
+        Ok(Ok(output)) => output,
+        Err(_)         => return Err(DeviceListingError::DeviceUnresponsive),
+        Ok(Err(error)) => return Err(DeviceListingError::CannotRunProcess(error.to_string())),
+    };
 
     let properties = String
     ::from_utf8_lossy(&output.stdout)
@@ -245,6 +265,6 @@ async fn find_device_model(adb_command: &str, device_id: &str) -> Result<String,
 
     match parts.is_empty() {
         false => Ok(parts.join(" ")),
-        true  => Ok(String::from("<Unknown>"))
+        true  => Err(DeviceListingError::UnrecognizedDebugBridgeOutput),
     }
 }

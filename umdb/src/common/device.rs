@@ -6,6 +6,7 @@ pub enum DeviceListingError {
     CannotRunProcess(String),
     BadExitCode(Option<i32>),
     DebugBridgePathMissing,
+    DeviceUnresponsive,
 }
 
 #[derive(Serialize)]
