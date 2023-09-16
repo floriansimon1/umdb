@@ -55,9 +55,9 @@ async fn list_devices(request: HttpRequest, actix_handle: ActixUmdbHandle) -> Re
 
     let handle_guard = read_handle(&actix_handle)?;
 
-    let devices = adb_devices(&handle_guard.umdb.configuration).map_err(|error| {
-        ErrorBadRequest(format_error(error))
-    })?;
+    let devices = adb_devices(&handle_guard.umdb.configuration)
+    .await
+    .map_err(|error| ErrorBadRequest(format_error(error)))?;
 
     Ok(web::Json(devices))
 }

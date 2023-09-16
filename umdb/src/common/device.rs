@@ -13,5 +13,6 @@ pub struct Device {
     pub id: String,
     pub is_remote: bool,
     pub is_offline: bool,
+    pub model: Option<String>,
     pub alias: Option<String>,
 }
