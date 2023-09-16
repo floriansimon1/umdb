@@ -45,7 +45,7 @@ impl ScanResult {
 
             ScanResult::UsbResult(usb_result) => Device {
                 model,
-                is_remote: true,
+                is_remote: false,
                 is_offline: false,
                 id: usb_result.id.clone(),
                 alias: aliases.get(&usb_result.id).map(|alias| alias.to_string()),
