@@ -2,6 +2,7 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub enum DeviceListingError {
+    UnrecognizedDebugBridgeOutput,
     CannotRunProcess(String),
     BadExitCode(Option<i32>),
     DebugBridgePathMissing,
@@ -10,4 +11,7 @@ pub enum DeviceListingError {
 #[derive(Serialize)]
 pub struct Device {
     pub id: String,
+    pub is_remote: bool,
+    pub is_offline: bool,
+    pub alias: Option<String>,
 }
