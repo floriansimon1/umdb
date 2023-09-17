@@ -53,6 +53,7 @@ impl ScanResult {
 
                 is_remote: true,
                 id: ip_result.id.clone(),
+                known_ips: vec![ip_result.ip],
                 is_offline: force_offline || ip_result.is_offline,
                 alias: aliases.get(&ip_result.id).map(|alias| alias.to_string()),
             },
@@ -62,6 +63,7 @@ impl ScanResult {
                 is_remote: false,
                 is_offline: false,
                 id: usb_result.id.clone(),
+                known_ips: usb_result.addresses.clone(),
                 alias: aliases.get(&usb_result.id).map(|alias| alias.to_string()),
             },
         }

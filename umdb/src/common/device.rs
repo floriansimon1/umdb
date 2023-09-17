@@ -1,3 +1,5 @@
+use std::net::IpAddr;
+
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -16,4 +18,5 @@ pub struct Device {
     pub is_offline: bool,
     pub model: Option<String>,
     pub alias: Option<String>,
+    pub known_ips: Vec<IpAddr>,
 }
