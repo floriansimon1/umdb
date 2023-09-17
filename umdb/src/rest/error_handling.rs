@@ -16,6 +16,9 @@ pub struct SystemUnsupportedError
 #[derive(Serialize)]
 pub struct MissingHeaderError<'a>(pub &'a str);
 
+#[derive(Serialize)]
+pub struct MalformedHeaderError<'a>(pub &'a str);
+
 pub fn make_system_unsupported_reponse() -> Error {
     ErrorBadRequest(format_error(SystemUnsupportedError {}))
 }
